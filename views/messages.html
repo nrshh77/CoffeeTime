@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Повідомлення — CoffeeTime</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5eee7;
+            margin: 0;
+            padding: 30px 15px;
+            color: #3b2a20;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #6f4e37;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .message-card {
+            background: white;
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #00000010;
+        }
+
+        .message-card p {
+            overflow-wrap: anywhere;
+        }
+
+        .delete-btn {
+            background: #a83232;
+        }
+
+        #status {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="top">
+            <h1>☕ Повідомлення CoffeeTime</h1>
+            <button id="logoutBtn">Вийти</button>
+        </div>
+
+        <p id="status">Завантаження повідомлень...</p>
+
+        <div id="messagesList"></div>
+
+    </div>
+
+    <script>
+        const messagesList = document.getElementById("messagesList");
+        const status = document.getElementById("status");
+        const logoutBtn = document.getElementById("logoutBtn");
+
+        // Завантаження повідомлень із сервера
+        async function loadMessages() {
+            try {
+                const response = await fetch("/api/messages");
+
+                if (response.status === 401) {
+                    window.location.href = "/admin/login";
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error("Не вдалося завантажити повідомлення.");
+                }
+
+                const messages = await response.json();
+
+                messagesList.innerHTML = "";
+
+                if (messages.length === 0) {
+                    status.textContent = "Повідомлень поки немає.";
+                    return;
+                }
+
+                status.textContent = "Усього повідомлень: " + messages.length;
+
+                messages.forEach(function (message) {
+                    const card = document.createElement("div");
+                    card.className = "message-card";
+
+                    const name = document.createElement("h3");
+                    name.textContent = message.name;
+
+                    const email = document.createElement("p");
+                    email.textContent = "Email: " + message.email;
+
+                    const text = document.createElement("p");
+                    text.textContent = message.message;
+
+                    const date = document.createElement("small");
+                    date.textContent = "Дата: " + message.created_at;
+
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.className = "delete-btn";
+                    deleteBtn.textContent = "Видалити";
+
+                    deleteBtn.addEventListener("click", function () {
+                        deleteMessage(message.id);
+                    });
+
+                    card.append(name, email, text, date, deleteBtn);
+                    messagesList.appendChild(card);
+                });
+
+            } catch (error) {
+                status.textContent = error.message;
+            }
+        }
+
+        // Видалення повідомлення
+        async function deleteMessage(id) {
+            if (!confirm("Ви дійсно хочете видалити це повідомлення?")) {
+                return;
+            }
+
+            try {
+                const response = await fetch("/api/messages/" + id, {
+                    method: "DELETE"
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message);
+                }
+
+                loadMessages();
+
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        // Вихід адміністратора
+        logoutBtn.addEventListener("click", async function () {
+            await fetch("/api/auth/logout", {
+                method: "POST"
+            });
+
+            window.location.href = "/admin/login";
+        });
+
+        // Завантажити повідомлення після відкриття сторінки
+        loadMessages();
+    </script>
+</body>
+</html>

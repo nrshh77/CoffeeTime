@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вхід адміністратора — CoffeeTime</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5eee7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 320px;
+            max-width: calc(100% - 60px);
+        }
+
+        input, button {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        button {
+            background: #6f4e37;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #loginMessage {
+            color: #b00020;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>☕ CoffeeTime</h1>
+        <h2>Вхід адміністратора</h2>
+
+        <form id="loginForm">
+            <input
+                type="text"
+                id="username"
+                placeholder="Логін"
+                required
+            >
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Пароль"
+                required
+            >
+
+            <button type="submit">Увійти</button>
+        </form>
+
+        <p id="loginMessage"></p>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById("loginForm");
+        const loginMessage = document.getElementById("loginMessage");
+
+        loginForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: document.getElementById("username").value,
+                    password: document.getElementById("password").value
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                window.location.href = "/admin/messages";
+            } else {
+                loginMessage.textContent = result.message;
+            }
+        });
+    </script>
+</body>
+</html>
