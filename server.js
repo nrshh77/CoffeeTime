@@ -9,7 +9,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Підключення бази даних
-const db = new Database(path.join(__dirname, "coffeetime.db"));
+const db = new Database(
+    process.env.NODE_ENV === "test"
+        ? ":memory:"
+        : path.join(__dirname, "coffeetime.db")
+);
 
 // Створення таблиці повідомлень
 db.exec(`
@@ -111,6 +115,11 @@ app.get("/api", (req, res) => {
 });
 
 // Запуск сервера
-app.listen(PORT, () => {
-    console.log(`CoffeeTime працює: http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`CoffeeTime працює: http://localhost:${PORT}`);
+    });
+}
+
+// Експорт для автоматичного тестування
+module.exports = { app, db };
